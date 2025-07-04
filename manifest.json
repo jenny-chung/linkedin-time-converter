@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "LinkedIn Date Time Viewer",
+    "version": "1.0",
+    "description": "Show exact timestamps on LinkedIn posts",
+    "permissions": ["scripting"],
+    "content_scripts": [
+      {
+        "matches": ["*://www.linkedin.com/*"],
+        "js": ["content.js"],
+        "run_at": "document_idle"
+      }
+    ],
+    "icons": {
+    }
+  }
+  
