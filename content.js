@@ -50,9 +50,9 @@ function convertRelativeToDateTime() {
     // dataset:  DOMStringMap
         // urn: "urn:li:activity:7287601008971563008"
         // id: "urn:li:comment:(activity:7287601008971563008,7287948535252033539)"
-    elements.forEach(e => {
-        console.log(e);
-        const rawUrn = e.dataset.urn || e.dataset.id;
+    elements.forEach(element => {
+        console.log(element);
+        const rawUrn = element.dataset.urn || element.dataset.id;
         if (!rawUrn) {
             return;
         }
@@ -88,58 +88,49 @@ function convertRelativeToDateTime() {
         // Convert into date format
         const date = formatTimestampToLocalDate(timestamp, true);
         console.log(date);
+
+        addTimestamp(element, date, rawUrn, targetID);
         
-        results.push({ element: e, urn: rawUrn, id: targetID, date });
-    });
-    
-
-    results.forEach(({ element, urn, id, date }) => {
-        // Check if this element has already been processed
-        // if (element.classList.contains('linkedin-timestamp-processed')) {
-        //     return;
-        // }
-
-        // Mark element as processed
-        // element.classList.add('linkedin-timestamp-processed');
-        let badgeAdded = false;
-
-        if (urn.startsWith('urn:li:comment')) {
-
-            const timeElement = element.querySelector('time.comments-comment-meta__data');
-            console.log(timeElement);
-            
-            if (timeElement) {
-                const badge = document.createElement("span");
-                badge.innerText = `${date} •`;
-                badge.style.fontSize = "1em";
-                badge.style.color = "#666";
-
-                timeElement.prepend(badge);
-                badgeAdded = true;
-            }
-
-        } else {
-
-            const postTimeElement = element.querySelector('.update-components-actor__sub-description > span[aria-hidden="true"]');
-            console.log(postTimeElement);
-
-            if (postTimeElement) {
-                const badge = document.createElement("span");
-                badge.innerText = `${date} • `;
-                badge.style.fontSize = "1em";
-                badge.style.color = "#666";
-
-                postTimeElement.prepend(badge);
-                badgeAdded = true;
-            }
-            
-        }
-
-        if (badgeAdded) {
-            processedIds.add(id);
-        }
     });
 
+}
+
+function addTimestamp(element, date, urn, id) {
+    let badgeAdded = false;
+
+    if (urn.startsWith('urn:li:comment')) {
+
+        const timeElement = element.querySelector('time.comments-comment-meta__data');
+        console.log(timeElement);
+
+        if (timeElement) {
+            badgeAdded = createTimestampSpan(date, timeElement);
+        }
+
+    } else {
+
+        const postTimeElement = element.querySelector('.update-components-actor__sub-description > span[aria-hidden="true"]');
+        console.log(postTimeElement);
+
+        if (postTimeElement) {
+            createTimestampSpan(date, postTimeElement);
+        }
+
+    }
+
+    if (badgeAdded) {
+        processedIds.add(id);
+    }
+}
+
+function createTimestampSpan(date, element) {
+    const badge = document.createElement("span");
+    badge.innerText = `${date} • `;
+    badge.style.fontSize = "1em";
+    badge.style.color = "#666";
+
+    element.prepend(badge);
+    return true;
 }
 
 function initializeTimestampConverter() {
