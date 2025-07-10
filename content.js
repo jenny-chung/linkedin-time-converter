@@ -34,6 +34,8 @@ function formatTimestampToLocalDate(timestamp, isHour12) {
     return `${dateTimeFormatted} (${timezone})`;
 }
 
+const processedIds = new Set();
+
 function convertRelativeToDateTime() {
     
     // Select all DOM elements with post or comment ids
@@ -49,7 +51,7 @@ function convertRelativeToDateTime() {
         // urn: "urn:li:activity:7287601008971563008"
         // id: "urn:li:comment:(activity:7287601008971563008,7287948535252033539)"
     elements.forEach(e => {
-
+        console.log(e);
         const rawUrn = e.dataset.urn || e.dataset.id;
         if (!rawUrn) {
             return;
@@ -57,7 +59,7 @@ function convertRelativeToDateTime() {
         console.log(rawUrn);
 
         const matches = [...rawUrn.matchAll(/\d{19}/g)];
-        console.log(matches)
+        // console.log(matches)
 
         let targetID = null
 
@@ -74,6 +76,11 @@ function convertRelativeToDateTime() {
         if (!targetID) {
             return;
         }
+        
+        if (processedIds.has(targetID)) {
+            console.log(`Skipping duplicate ID: ${targetID}`);
+            return;
+        }
 
         console.log(targetID);
         const timestamp = extractUnixTimestamp(targetID);
@@ -86,14 +93,15 @@ function convertRelativeToDateTime() {
     });
     
 
-    results.forEach(({ element, urn, date }) => {
+    results.forEach(({ element, urn, id, date }) => {
         // Check if this element has already been processed
-        if (element.classList.contains('linkedin-timestamp-processed')) {
-            return;
-        }
+        // if (element.classList.contains('linkedin-timestamp-processed')) {
+        //     return;
+        // }
 
         // Mark element as processed
-        element.classList.add('linkedin-timestamp-processed');
+        // element.classList.add('linkedin-timestamp-processed');
+        let badgeAdded = false;
 
         if (urn.startsWith('urn:li:comment')) {
 
@@ -107,6 +115,7 @@ function convertRelativeToDateTime() {
                 badge.style.color = "#666";
 
                 timeElement.prepend(badge);
+                badgeAdded = true;
             }
 
         } else {
@@ -121,23 +130,17 @@ function convertRelativeToDateTime() {
                 badge.style.color = "#666";
 
                 postTimeElement.prepend(badge);
+                badgeAdded = true;
             }
             
+        }
+
+        if (badgeAdded) {
+            processedIds.add(id);
         }
     });
 
 }
-
-// update-components-actor__sub-description text-body-xsmall
-// t-black--light
-                
-// {/* <time class="comments-comment-meta__data">
-// 5mo
-// </time>              */}
-{/* <div class="comments-comment-meta__info">
-<time class="comments-comment-meta__data">
-    5mo
-</time> */}
 
 function initializeTimestampConverter() {
 
@@ -188,6 +191,12 @@ function initializeTimestampConverter() {
 initializeTimestampConverter();
 
 
-
+// update-components-actor__sub-description text-body-xsmall
+// t-black--light
+                
+{/* <div class="comments-comment-meta__info">
+<time class="comments-comment-meta__data">
+    5mo
+</time> */}
 
 
