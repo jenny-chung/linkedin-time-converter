@@ -1,17 +1,31 @@
 {
     "manifest_version": 3,
-    "name": "LinkedIn Date Time Viewer",
+    "name": "LinkedIn Timestamp Converter",
     "version": "1.0",
-    "description": "Show exact timestamps on LinkedIn posts",
-    "permissions": ["scripting"],
+    "description": "See exact dates and times on LinkedIn instead of relative timestamps like '5mo ago'",
+    "permissions": [
+        "storage",
+        "activeTab"],
+    
+    "action": {
+        "default_popup": "popup.html"
+    }, 
+    
+
     "content_scripts": [
       {
-        "matches": ["*://www.linkedin.com/*"],
+        "matches": ["*://www.linkedin.com/*", "*://*.linkedin.com/*"],
         "js": ["content.js"],
         "run_at": "document_idle"
       }
     ],
+
     "icons": {
+        "16": "icon16.png",
+        "32": "icon32.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
     }
+
   }
   
