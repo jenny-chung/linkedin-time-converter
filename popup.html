@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Timestamp Converter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Header Section -->
+    <div class="header">
+        <div class="logo">Display LinkedIn Dates</div>
+        <div class="subtitle">See exact dates and times instead of "5mo ago"</div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="container">
+        
+        <!-- Status Section -->
+        <div class="status-section">
+            <div class="status active" id="status">
+                <div class="status-dot"></div>
+                <span>Extension enabled</span>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-label">Enable Extension</div>
+                  <div class="setting-description">(Page will reload)</div>
+                </div>
+                <div class="toggle-switch active" id="enabled"></div>
+              </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div class="settings-section">
+
+           
+
+            <div class="section-title">Display Options</div>
+            
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Show Time</div>
+                    <div class="setting-description">Include hours and minutes</div>
+                </div>
+                <div class="toggle-switch active" id="showTime"></div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">24-Hour Time</div>
+                    <div class="setting-description">Use 24-hour time instead of 12-hour</div>
+                </div>
+                <div class="toggle-switch" id="hour24"></div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Show Timezone</div>
+                    <div class="setting-description">Display timezone abbreviation</div>
+                </div>
+                <div class="toggle-switch active" id="showTimezone"></div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Show Year</div>
+                    <div class="setting-description">Always show year in date</div>
+                </div>
+                <div class="toggle-switch active" id="showYear"></div>
+            </div>
+
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section">
+            <div class="section-title">Preview</div>
+            <div class="preview-box">
+                <div class="preview-label">Current Format</div>
+                <div class="preview-text" id="previewText">Dec 25, 2024, 3:30 PM (PST)</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Section  -->
+    <div class="footer">
+        <div class="footer-text">
+            made by jen ❤️ • <a href="#" class="footer-link">Report Issue</a>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+
+</body>
+</html>
