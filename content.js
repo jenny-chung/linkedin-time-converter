@@ -1,3 +1,21 @@
+let settings = {
+    enabled: true,
+    showTime: true,
+    hour24: false,
+    showTimezone: true,
+    showYear: true
+};
+
+// Loading settings from Chrome storage
+function loadSettings() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(settings, (result) => {
+            settings = {...settings, ...result };
+            resolve(settings);
+        });
+    });
+}
+
 function extractUnixTimestamp(idString) {
     // Convert 19 digit ID string into binary string
     const idBinary = BigInt(idString).toString(2);
@@ -15,29 +33,44 @@ function formatTimestampToUTCDate(timestamp) {
     return date.toUTCString();
 }
 
-function formatTimestampToLocalDate(timestamp, isHour12) {
+function formatTimestampToLocalDate(timestamp) {
     const date = new Date(timestamp);
 
-    const dateTimeFormatted = date.toLocaleString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: isHour12,
-        year: 'numeric',
+    const options = {
         month: 'short',
         day: 'numeric',
-    });
+    };
 
-    const timezone = date.toLocaleString(undefined, {
-        timeZoneName: 'short',
-    }).split(' ').pop()
+    if (settings.showYear) {
+        options.year = 'numeric';
+    }
 
-    return `${dateTimeFormatted} (${timezone})`;
+    if (settings.showTime) {
+        options.hour = 'numeric';
+        options.minute = '2-digit';
+        options.hour12 = !settings.hour24;
+    }
+
+    const dateTimeFormatted = date.toLocaleString(undefined, options);
+
+    if (settings.showTime && settings.showTimezone) {
+        const timezone = date.toLocaleString(undefined, {
+            timeZoneName: 'short',
+        }).split(' ').pop();
+        return `${dateTimeFormatted} (${timezone})`;
+    }
+    
+    return dateTimeFormatted;
 }
 
 const processedIds = new Set();
 
 function convertRelativeToDateTime() {
     
+    if (!settings.enabled) {
+        return;
+    }
+
     // Select all DOM elements with post or comment ids
     // data-id="urn:li:activity:7345418473369485316"
     // href="/feed/update/urn:li:activity:728760100897156300
@@ -77,8 +110,13 @@ function convertRelativeToDateTime() {
             return;
         }
         
-        if (processedIds.has(targetID)) {
-            console.log(`Skipping duplicate ID: ${targetID}`);
+        let targetSelector = rawUrn.startsWith('urn:li:comment') ? 'time.comments-comment-meta__data' : '.update-components-actor__sub-description > span[aria-hidden="true"]';
+        const targetElement = element.querySelector(targetSelector);
+        
+        const hasExistingDateTime = targetElement && targetElement.querySelector('.linkedin-datetime-badge');
+        
+        if (processedIds.has(targetID) && hasExistingDateTime) {
+            console.log(`Skipping duplicate ID with existing timestamp: ${targetID}`);
             return;
         }
 
@@ -86,58 +124,87 @@ function convertRelativeToDateTime() {
         const timestamp = extractUnixTimestamp(targetID);
         
         // Convert into date format
-        const date = formatTimestampToLocalDate(timestamp, true);
+        const date = formatTimestampToLocalDate(timestamp);
         console.log(date);
 
-        addTimestamp(element, date, rawUrn, targetID);
+        addDateTime(element, date, rawUrn, targetID);
         
     });
 
 }
 
-function addTimestamp(element, date, urn, id) {
-    let badgeAdded = false;
+function addDateTime(element, date, urn, id) {
+    
+    const isComment = urn.startsWith('urn:li:comment');
+    let targetSelector = isComment ? 'time.comments-comment-meta__data' : '.update-components-actor__sub-description > span[aria-hidden="true"]';
+   
+    const targetElement = element.querySelector(targetSelector);
 
-    if (urn.startsWith('urn:li:comment')) {
+    if (targetElement) {
+        console.log(targetElement);
 
-        const timeElement = element.querySelector('time.comments-comment-meta__data');
-        console.log(timeElement);
-
-        if (timeElement) {
-            badgeAdded = createTimestampSpan(date, timeElement);
+        // Check if timestamp has already been added to this specific element
+        const existingTimeStamp = targetElement.querySelector('.linkedin-datetime-badge');
+        if (!existingTimeStamp) {
+            createDateTimeSpan(date, targetElement, isComment);
+            processedIds.add(id);
         }
-
-    } else {
-
-        const postTimeElement = element.querySelector('.update-components-actor__sub-description > span[aria-hidden="true"]');
-        console.log(postTimeElement);
-
-        if (postTimeElement) {
-            createTimestampSpan(date, postTimeElement);
-        }
-
-    }
-
-    if (badgeAdded) {
-        processedIds.add(id);
+       
     }
 }
 
-function createTimestampSpan(date, element) {
+// Refresh time stamps when user settings change
+function refreshDateTime() {
+    const existingBadges = document.querySelectorAll('.linkedin-datetime-badge');
+    existingBadges.forEach((badge) => badge.remove());
+
+    processedIds.clear();
+
+    convertRelativeToDateTime();
+}
+
+function setupStorageListener() {
+    // Listen for messages from popup
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === 'settingsChanged') {
+            settings = message.settings;
+
+            if (settings.enabled) {
+                refreshDateTime();
+            } 
+        }
+    });
+}
+
+function createDateTimeSpan(date, element, isComment) {
     const badge = document.createElement("span");
-    badge.innerText = `${date} • `;
+    // badge.innerText = `${date} • `;
     badge.style.fontSize = "1em";
     badge.style.color = "#666";
+    badge.classList.add('linkedin-datetime-badge');
 
+    if (isComment) {
+        badge.innerText = `${date} •`;
+    } else {
+        badge.innerText = `${date} • `; 
+    }
     element.prepend(badge);
-    return true;
 }
+
 
 function initializeTimestampConverter() {
 
-    convertRelativeToDateTime();
+    loadSettings().then(() => {
+        if (settings.enabled) {
+            convertRelativeToDateTime();
+        }
+    });
+
+    setupStorageListener();
 
     const observer = new MutationObserver((mutations) => {
+        if (!settings.enabled) return;
+
         let shouldRerun = false;
 
         mutations.forEach((mutation) => {
@@ -181,7 +248,6 @@ function initializeTimestampConverter() {
 
 initializeTimestampConverter();
 
-
 // update-components-actor__sub-description text-body-xsmall
 // t-black--light
                 
@@ -189,5 +255,3 @@ initializeTimestampConverter();
 <time class="comments-comment-meta__data">
     5mo
 </time> */}
-
-
