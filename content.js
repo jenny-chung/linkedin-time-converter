@@ -153,7 +153,7 @@ function addDateTime(element, date, urn, id) {
     }
 }
 
-// Refresh time stamps when user settings change
+// Refresh date and time display when settings change
 function refreshDateTime() {
     const existingBadges = document.querySelectorAll('.linkedin-datetime-badge');
     existingBadges.forEach((badge) => badge.remove());
@@ -166,6 +166,7 @@ function refreshDateTime() {
 function setupStorageListener() {
     // Listen for messages from popup
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        console.log("Received message in content.js:", message);
         if (message.action === 'settingsChanged') {
             settings = message.settings;
 
@@ -178,16 +179,12 @@ function setupStorageListener() {
 
 function createDateTimeSpan(date, element, isComment) {
     const badge = document.createElement("span");
-    // badge.innerText = `${date} • `;
     badge.style.fontSize = "1em";
     badge.style.color = "#666";
     badge.classList.add('linkedin-datetime-badge');
 
-    if (isComment) {
-        badge.innerText = `${date} •`;
-    } else {
-        badge.innerText = `${date} • `; 
-    }
+    badge.innerText = isComment ? `${date} •` : `${date} • `;
+
     element.prepend(badge);
 }
 
