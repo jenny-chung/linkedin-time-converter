@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "LinkedIn Timestamp Converter",
+    "name": "LinkedIn Display Dates",
     "version": "1.0",
     "description": "See exact dates and times on LinkedIn instead of relative timestamps like '5mo ago'",
     "permissions": [
